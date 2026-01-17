@@ -180,7 +180,7 @@ function UgeplanContent() {
                 dag={dag.key}
                 label={dag.label}
                 date={weekDates[index]}
-                data={ugeplan?.dage[dag.key] || { ret: null, opskriftId: null }}
+                data={ugeplan?.dage?.[dag.key] || { ret: null, opskriftId: null }}
                 opskrifter={opskrifter}
                 tidligereRetter={tidligereRetter}
                 onSave={(ret, opskriftId) => handleSaveDay(dag.key, ret, opskriftId)}

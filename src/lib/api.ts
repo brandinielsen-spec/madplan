@@ -164,3 +164,40 @@ export async function sletIndkoebspost(id: string): Promise<void> {
 export async function hentTidligereRetter(ejerId: string): Promise<string[]> {
   return fetchApi<string[]>(`/madplan/retter?ejerId=${ejerId}`);
 }
+
+// Import opskrift fra URL
+export interface ImportedOpskrift {
+  titel: string;
+  portioner: number;
+  ingredienser: string[];
+  fremgangsmaade: string;
+}
+
+export async function importOpskriftFraUrl(url: string): Promise<ImportedOpskrift> {
+  const result = await fetchApi<{ success: boolean; data?: ImportedOpskrift; error?: string }>(
+    '/madplan/opskrift/import-url',
+    {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    }
+  );
+  if (!result.success || !result.data) {
+    throw new Error(result.error || 'Kunne ikke importere opskrift fra URL');
+  }
+  return result.data;
+}
+
+// Import opskrift fra billede
+export async function importOpskriftFraBillede(imageBase64: string): Promise<ImportedOpskrift> {
+  const result = await fetchApi<{ success: boolean; data?: ImportedOpskrift; error?: string }>(
+    '/madplan/opskrift/import-billede',
+    {
+      method: 'POST',
+      body: JSON.stringify({ imageBase64 }),
+    }
+  );
+  if (!result.success || !result.data) {
+    throw new Error(result.error || 'Kunne ikke importere opskrift fra billede');
+  }
+  return result.data;
+}
