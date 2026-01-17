@@ -174,13 +174,17 @@ export interface ImportedOpskrift {
 }
 
 export async function importOpskriftFraUrl(url: string): Promise<ImportedOpskrift> {
-  const result = await fetchApi<{ success: boolean; data?: ImportedOpskrift; error?: string }>(
-    '/madplan/opskrift/import-url',
-    {
-      method: 'POST',
-      body: JSON.stringify({ url }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/madplan/opskrift/import-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const result = await response.json();
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Kunne ikke importere opskrift fra URL');
   }
@@ -189,13 +193,17 @@ export async function importOpskriftFraUrl(url: string): Promise<ImportedOpskrif
 
 // Import opskrift fra billede
 export async function importOpskriftFraBillede(imageBase64: string): Promise<ImportedOpskrift> {
-  const result = await fetchApi<{ success: boolean; data?: ImportedOpskrift; error?: string }>(
-    '/madplan/opskrift/import-billede',
-    {
-      method: 'POST',
-      body: JSON.stringify({ imageBase64 }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/madplan/opskrift/import-billede`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64 }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const result = await response.json();
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Kunne ikke importere opskrift fra billede');
   }
