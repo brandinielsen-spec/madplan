@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import WeekSelector from '@/components/WeekSelector';
 import ShoppingItem from '@/components/ShoppingItem';
@@ -8,7 +8,7 @@ import { Ejer, Indkoebspost } from '@/lib/types';
 import { getCurrentWeek } from '@/lib/utils';
 import * as api from '@/lib/api';
 
-export default function IndkobslistePage() {
+function IndkobslisteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -203,5 +203,13 @@ export default function IndkobslistePage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function IndkobslistePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">Indlæser...</div></div>}>
+      <IndkobslisteContent />
+    </Suspense>
   );
 }

@@ -48,10 +48,26 @@ export async function gemDag(
   ret: string,
   opskriftId?: string
 ): Promise<Ugeplan> {
-  return fetchApi<Ugeplan>('/madplan/dag/gem', {
-    method: 'POST',
-    body: JSON.stringify({ ejerId, aar, uge, dag, ret, opskriftId }),
+  // Først hent eksisterende ugeplan
+  let ugeplan = await hentUgeplan(ejerId, aar, uge);
+
+  // Hvis ingen ugeplan findes, opret en ny
+  if (!ugeplan) {
+    const created = await fetchApi<{ id: string }>('/madplan/uge/opret', {
+      method: 'POST',
+      body: JSON.stringify({ ejerId, aar, uge }),
+    });
+    ugeplan = { id: created.id, ejerId, aar, uge, dage: {} } as Ugeplan;
+  }
+
+  // Opdater dagen
+  await fetchApi('/madplan/dag/opdater', {
+    method: 'PUT',
+    body: JSON.stringify({ id: ugeplan.id, dag, ret, opskriftId }),
   });
+
+  // Hent opdateret ugeplan
+  return (await hentUgeplan(ejerId, aar, uge)) as Ugeplan;
 }
 
 export async function sletDag(
@@ -60,9 +76,13 @@ export async function sletDag(
   uge: number,
   dag: Ugedag
 ): Promise<void> {
+  // Hent eksisterende ugeplan for at få id
+  const ugeplan = await hentUgeplan(ejerId, aar, uge);
+  if (!ugeplan) return;
+
   await fetchApi('/madplan/dag/slet', {
     method: 'DELETE',
-    body: JSON.stringify({ ejerId, aar, uge, dag }),
+    body: JSON.stringify({ id: ugeplan.id, dag }),
   });
 }
 
