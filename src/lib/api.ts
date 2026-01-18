@@ -234,6 +234,18 @@ export async function importOpskriftFraBillede(imageBase64: string): Promise<Imp
   return result.data;
 }
 
+// Ryd alle indkøbsposter for en uge
+export async function rydIndkoebsliste(
+  ejerId: string,
+  aar: number,
+  uge: number
+): Promise<void> {
+  const poster = await hentIndkoebsliste(ejerId, aar, uge);
+  for (const post of poster) {
+    await sletIndkoebspost(post.id);
+  }
+}
+
 // Tilføj ingredienser til indkøbsliste
 export async function tilfoejIngredienser(
   ejerId: string,

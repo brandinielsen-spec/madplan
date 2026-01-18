@@ -76,7 +76,18 @@ function IndkobslisteContent() {
     if (!selectedEjerId || !newItem.trim()) return;
 
     try {
-      const item = await api.tilfoejManuelPost(selectedEjerId, aar, uge, newItem.trim());
+      const navn = newItem.trim();
+      const result = await api.tilfoejManuelPost(selectedEjerId, aar, uge, navn);
+      // Konstruer fuldt objekt lokalt da API kun returnerer id
+      const item: Indkoebspost = {
+        id: result.id,
+        ejerId: selectedEjerId,
+        aar,
+        uge,
+        navn,
+        kilde: 'manuel',
+        afkrydset: false
+      };
       setIndkoebsposter(prev => [...prev, item]);
       setNewItem('');
     } catch (error) {
@@ -86,8 +97,9 @@ function IndkobslisteContent() {
 
   const handleToggle = useCallback(async (id: string, checked: boolean) => {
     try {
-      const updated = await api.opdaterIndkoebspost(id, checked);
-      setIndkoebsposter(prev => prev.map(p => p.id === id ? updated : p));
+      await api.opdaterIndkoebspost(id, checked);
+      // Opdater lokalt state - bevar eksisterende data, opdater kun afkrydset
+      setIndkoebsposter(prev => prev.map(p => p.id === id ? { ...p, afkrydset: checked } : p));
     } catch (error) {
       console.error('Fejl ved opdatering af vare:', error);
     }
@@ -101,6 +113,18 @@ function IndkobslisteContent() {
       console.error('Fejl ved sletning af vare:', error);
     }
   }, []);
+
+  const handleClearAll = useCallback(async () => {
+    if (!selectedEjerId) return;
+    if (!confirm('Er du sikker på at du vil rydde hele indkøbslisten?')) return;
+
+    try {
+      await api.rydIndkoebsliste(selectedEjerId, aar, uge);
+      setIndkoebsposter([]);
+    } catch (error) {
+      console.error('Fejl ved rydning af indkøbsliste:', error);
+    }
+  }, [selectedEjerId, aar, uge]);
 
   if (loading && ejere.length === 0) {
     return (
@@ -198,6 +222,16 @@ function IndkobslisteContent() {
                   </div>
                 </section>
               )}
+
+              {/* Ryd alle knap */}
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleClearAll}
+                  className="w-full py-3 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+                >
+                  Ryd alle
+                </button>
+              </div>
             </>
           )}
         </>

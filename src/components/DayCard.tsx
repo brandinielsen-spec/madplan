@@ -15,7 +15,6 @@ interface DayCardProps {
   onDelete: () => void;
   onViewOpskrift?: (opskriftId: string) => void;
   onAddToShopping?: (opskrift: Opskrift) => void;
-  addedToShopping?: boolean;
 }
 
 export default function DayCard({
@@ -29,7 +28,6 @@ export default function DayCard({
   onDelete,
   onViewOpskrift,
   onAddToShopping,
-  addedToShopping,
 }: DayCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [retInput, setRetInput] = useState(data.ret || '');
@@ -104,14 +102,9 @@ export default function DayCard({
               {onAddToShopping && (
                 <button
                   onClick={() => onAddToShopping(linkedOpskrift)}
-                  disabled={addedToShopping}
-                  className={`text-sm flex items-center gap-1 ${
-                    addedToShopping
-                      ? 'text-green-600'
-                      : 'text-orange-600 hover:text-orange-700'
-                  }`}
+                  className="text-sm flex items-center gap-1 text-orange-600 hover:text-orange-700"
                 >
-                  {addedToShopping ? '✓ Tilføjet' : '🛒 Til indkøb'}
+                  🛒 Til indkøb
                 </button>
               )}
             </div>
