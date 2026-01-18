@@ -106,33 +106,33 @@ export default function DayCard({
             )}
           </div>
 
-          {opskrifter.length > 0 && (
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Vælg opskrift</label>
-              <select
-                value={selectedOpskriftId}
-                onChange={(e) => {
-                  const opskriftId = e.target.value;
-                  setSelectedOpskriftId(opskriftId);
-                  // Auto-udfyld ret-navn når opskrift vælges
-                  if (opskriftId) {
-                    const opskrift = opskrifter.find(o => o.id === opskriftId);
-                    if (opskrift) {
-                      setRetInput(opskrift.titel);
-                    }
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Vælg opskrift ({opskrifter.length} tilgængelige)
+            </label>
+            <select
+              value={selectedOpskriftId}
+              onChange={(e) => {
+                const opskriftId = e.target.value;
+                setSelectedOpskriftId(opskriftId);
+                // Auto-udfyld ret-navn når opskrift vælges
+                if (opskriftId) {
+                  const opskrift = opskrifter.find(o => o.id === opskriftId);
+                  if (opskrift) {
+                    setRetInput(opskrift.titel);
                   }
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
-              >
-                <option value="">-- Vælg fra dine opskrifter --</option>
-                {opskrifter.map((opskrift) => (
-                  <option key={opskrift.id} value={opskrift.id}>
-                    {opskrift.titel}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
+            >
+              <option value="">{opskrifter.length > 0 ? '-- Vælg fra dine opskrifter --' : '(Ingen opskrifter)'}</option>
+              {opskrifter.map((opskrift) => (
+                <option key={opskrift.id} value={opskrift.id}>
+                  {opskrift.titel}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="flex gap-2">
             <button
