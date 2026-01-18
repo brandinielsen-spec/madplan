@@ -23,6 +23,7 @@ function UgeplanContent() {
   const [tidligereRetter, setTidligereRetter] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [addedToShopping, setAddedToShopping] = useState<Set<string>>(new Set());
 
   const weekDates = getWeekDates(aar, uge);
 
@@ -142,6 +143,17 @@ function UgeplanContent() {
     router.push(`/opskrifter/${opskriftId}`);
   }, [router]);
 
+  const handleAddToShopping = useCallback(async (opskrift: Opskrift) => {
+    if (!selectedEjerId || addedToShopping.has(opskrift.id)) return;
+
+    try {
+      await api.tilfoejIngredienser(selectedEjerId, aar, uge, opskrift.ingredienser);
+      setAddedToShopping(prev => new Set(prev).add(opskrift.id));
+    } catch (error) {
+      console.error('Fejl ved tilføjelse til indkøbsliste:', error);
+    }
+  }, [selectedEjerId, aar, uge, addedToShopping]);
+
   if (loading && ejere.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -186,6 +198,8 @@ function UgeplanContent() {
                 onSave={(ret, opskriftId) => handleSaveDay(dag.key, ret, opskriftId)}
                 onDelete={() => handleDeleteDay(dag.key)}
                 onViewOpskrift={handleViewOpskrift}
+                onAddToShopping={handleAddToShopping}
+                addedToShopping={addedToShopping.has(ugeplan?.dage?.[dag.key]?.opskriftId || '')}
               />
             ))}
           </div>

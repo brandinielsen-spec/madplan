@@ -14,6 +14,8 @@ interface DayCardProps {
   onSave: (ret: string, opskriftId?: string) => void;
   onDelete: () => void;
   onViewOpskrift?: (opskriftId: string) => void;
+  onAddToShopping?: (opskrift: Opskrift) => void;
+  addedToShopping?: boolean;
 }
 
 export default function DayCard({
@@ -26,6 +28,8 @@ export default function DayCard({
   onSave,
   onDelete,
   onViewOpskrift,
+  onAddToShopping,
+  addedToShopping,
 }: DayCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [retInput, setRetInput] = useState(data.ret || '');
@@ -87,13 +91,30 @@ export default function DayCard({
             </button>
           </div>
           <p className="text-gray-900 font-medium">{data.ret}</p>
-          {linkedOpskrift && onViewOpskrift && (
-            <button
-              onClick={() => onViewOpskrift(linkedOpskrift.id)}
-              className="mt-1 text-sm text-blue-600 hover:text-blue-700"
-            >
-              Se opskrift →
-            </button>
+          {linkedOpskrift && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {onViewOpskrift && (
+                <button
+                  onClick={() => onViewOpskrift(linkedOpskrift.id)}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Se opskrift →
+                </button>
+              )}
+              {onAddToShopping && (
+                <button
+                  onClick={() => onAddToShopping(linkedOpskrift)}
+                  disabled={addedToShopping}
+                  className={`text-sm flex items-center gap-1 ${
+                    addedToShopping
+                      ? 'text-green-600'
+                      : 'text-orange-600 hover:text-orange-700'
+                  }`}
+                >
+                  {addedToShopping ? '✓ Tilføjet' : '🛒 Til indkøb'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       );

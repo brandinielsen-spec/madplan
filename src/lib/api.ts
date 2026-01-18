@@ -233,3 +233,21 @@ export async function importOpskriftFraBillede(imageBase64: string): Promise<Imp
   }
   return result.data;
 }
+
+// Tilføj ingredienser til indkøbsliste
+export async function tilfoejIngredienser(
+  ejerId: string,
+  aar: number,
+  uge: number,
+  ingredienser: string[]
+): Promise<number> {
+  let added = 0;
+  for (const ingrediens of ingredienser) {
+    const navn = ingrediens.trim();
+    if (navn) {
+      await tilfoejManuelPost(ejerId, aar, uge, navn);
+      added++;
+    }
+  }
+  return added;
+}
