@@ -15,8 +15,18 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     throw new Error(`API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  return data.data ?? data;
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  const data = JSON.parse(text);
+
+  // Hvis response har en data property, returner den (også selvom den er null)
+  if ('data' in data) {
+    return data.data;
+  }
+  return data;
 }
 
 // Ejere
@@ -40,6 +50,17 @@ export async function hentUgeplan(ejerId: string, aar: number, uge: number): Pro
   }
 }
 
+// Map dansk dagsnavn til Airtable feltnavn
+const dagTilFelt: Record<Ugedag, string> = {
+  mandag: 'Mandag',
+  tirsdag: 'Tirsdag',
+  onsdag: 'Onsdag',
+  torsdag: 'Torsdag',
+  fredag: 'Fredag',
+  loerdag: 'Loerdag',
+  soendag: 'Soendag',
+};
+
 export async function gemDag(
   ejerId: string,
   aar: number,
@@ -60,10 +81,11 @@ export async function gemDag(
     ugeplan = { id: created.id, ejerId, aar, uge, dage: {} } as Ugeplan;
   }
 
-  // Opdater dagen
+  // Opdater dagen - brug POST og send feltNavn direkte
+  const feltNavn = dagTilFelt[dag];
   await fetchApi('/madplan/dag/opdater', {
-    method: 'PUT',
-    body: JSON.stringify({ id: ugeplan.id, dag, ret, opskriftId }),
+    method: 'POST',
+    body: JSON.stringify({ id: ugeplan.id, feltNavn, ret, opskriftId }),
   });
 
   // Hent opdateret ugeplan
@@ -80,9 +102,11 @@ export async function sletDag(
   const ugeplan = await hentUgeplan(ejerId, aar, uge);
   if (!ugeplan) return;
 
+  // Brug POST og send feltNavn direkte
+  const feltNavn = dagTilFelt[dag];
   await fetchApi('/madplan/dag/slet', {
-    method: 'DELETE',
-    body: JSON.stringify({ id: ugeplan.id, dag }),
+    method: 'POST',
+    body: JSON.stringify({ id: ugeplan.id, feltNavn }),
   });
 }
 
