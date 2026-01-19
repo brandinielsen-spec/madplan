@@ -1,0 +1,144 @@
+{
+  "name": "Madplan - Import Opskrift Billede",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/opskrift/import-billede",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-opskrift-import-billede",
+      "id": "4d41625f-aa85-4a77-a6ed-a54269e99a2e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nreturn [{ json: { model: 'openai/gpt-4o', temperature: 0, messages: [{ role: 'system', content: 'Udtræk opskrift fra billedet. Returner UDELUKKENDE valid JSON: {titel, portioner, ingredienser[], fremgangsmaade}' }, { role: 'user', content: [{ type: 'image_url', image_url: { url: body.billede } }] }] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Prepare",
+      "id": "dd74b807-0998-4ff3-91ec-8a8bdcd7f74c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "OpenRouter",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HYx1Z20h0wAhpc79",
+          "name": "OpenRouter account"
+        }
+      },
+      "id": "8364b836-b27a-4353-9ac9-c40631d154e2"
+    },
+    {
+      "parameters": {
+        "jsCode": "try { const c = $input.first().json.choices?.[0]?.message?.content; if (!c) return [{ json: { success: false, error: 'Ingen respons' } }]; let j = c; if (c.includes('```json')) j = c.split('```json')[1].split('```')[0]; else if (c.includes('```')) j = c.split('```')[1].split('```')[0]; return [{ json: { success: true, data: JSON.parse(j.trim()) } }]; } catch(e) { return [{ json: { success: false, error: e.message } }]; }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Parse",
+      "id": "6c465adb-861a-4a2f-a30b-639e06a58150"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        0
+      ],
+      "name": "Respond",
+      "id": "9bc23c7b-18d5-4657-a231-5f54dcf7bbc7"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

@@ -1,0 +1,124 @@
+{
+  "name": "Madplan - Hent Tidligere Retter",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "madplan/retter",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-retter",
+      "id": "4f4174c1-6ba2-44e9-9640-c632fa8cbd42"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDLvyhNSt6MrJ5Q",
+          "mode": "id"
+        },
+        "filterByFormula": "={EjerId}=\"{{ $json.query.ejerId }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "e8008127-8f28-4794-9148-ba95643e2dd8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst retter = new Set();\nconst dage = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Loerdag', 'Soendag'];\nitems.forEach(i => {\n  dage.forEach(d => {\n    if (i.json[d]) retter.add(i.json[d]);\n  });\n});\nreturn [{ json: { success: true, data: Array.from(retter) } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Transform",
+      "id": "76edba5c-94ba-4515-b3ff-b14b01db732b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Respond",
+      "id": "ae7ec827-1d56-42c1-9d86-9ddb76b15280"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

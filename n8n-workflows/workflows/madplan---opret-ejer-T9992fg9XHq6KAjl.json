@@ -1,0 +1,107 @@
+{
+  "name": "Madplan - Opret Ejer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/ejer/opret",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-ejer-opret",
+      "id": "2a80d62c-9b2f-4a3f-b598-0b9b07ac7f7d"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblpbQPajJccoBV1j",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Navn": "={{ $json.body.navn }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "9d60ab04-0f85-4ec7-bbae-f7cdf4b552ce"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, data: { id: $json.id, navn: $json.Navn } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Respond",
+      "id": "1055d31b-25d9-4993-a8ad-933d453fca8b"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

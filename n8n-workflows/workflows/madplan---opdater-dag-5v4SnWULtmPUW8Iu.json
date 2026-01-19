@@ -1,0 +1,300 @@
+{
+  "name": "Madplan - Opdater Dag",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/dag/opdater",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-dag-opdater-mkk3vdn3",
+      "id": "d656d1f4-3223-4c56-bfb6-35ff6673e037"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Output med id felt for matching og dag-felt + opskriftId for opdatering\nconst body = $input.first().json.body;\n\nconst feltNavn = body.feltNavn;\nconst ret = body.ret || '';\nconst opskriftId = body.opskriftId || '';\nconst recordId = body.id;\n\nif (!recordId) throw new Error('Mangler id');\nif (!feltNavn) throw new Error('Mangler feltNavn');\n\n// Output: id bruges af matchingColumns, dag-felt og opskriftId opdateres\nconst result = {\n  id: recordId\n};\nresult[feltNavn] = ret;\nresult[feltNavn + 'OpskriftId'] = opskriftId;\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Prepare",
+      "id": "ccbe5cc2-598e-449c-bccd-13d6c63eaba0"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDLvyhNSt6MrJ5Q",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "Mandag": "={{ $json.Mandag }}",
+            "MandagOpskriftId": "={{ $json.MandagOpskriftId }}",
+            "Tirsdag": "={{ $json.Tirsdag }}",
+            "TirsdagOpskriftId": "={{ $json.TirsdagOpskriftId }}",
+            "Onsdag": "={{ $json.Onsdag }}",
+            "OnsdagOpskriftId": "={{ $json.OnsdagOpskriftId }}",
+            "Torsdag": "={{ $json.Torsdag }}",
+            "TorsdagOpskriftId": "={{ $json.TorsdagOpskriftId }}",
+            "Fredag": "={{ $json.Fredag }}",
+            "FredagOpskriftId": "={{ $json.FredagOpskriftId }}",
+            "Loerdag": "={{ $json.Loerdag }}",
+            "LoerdagOpskriftId": "={{ $json.LoerdagOpskriftId }}",
+            "Soendag": "={{ $json.Soendag }}",
+            "SoendagOpskriftId": "={{ $json.SoendagOpskriftId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mandag",
+              "displayName": "Mandag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MandagOpskriftId",
+              "displayName": "MandagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tirsdag",
+              "displayName": "Tirsdag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TirsdagOpskriftId",
+              "displayName": "TirsdagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Onsdag",
+              "displayName": "Onsdag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "OnsdagOpskriftId",
+              "displayName": "OnsdagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Torsdag",
+              "displayName": "Torsdag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TorsdagOpskriftId",
+              "displayName": "TorsdagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fredag",
+              "displayName": "Fredag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FredagOpskriftId",
+              "displayName": "FredagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Loerdag",
+              "displayName": "Loerdag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LoerdagOpskriftId",
+              "displayName": "LoerdagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Soendag",
+              "displayName": "Soendag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SoendagOpskriftId",
+              "displayName": "SoendagOpskriftId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "e6660129-ddf1-4ce5-9574-5cdad505863f"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, updatedId: $json.id } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Respond",
+      "id": "3254c769-a280-42a1-a121-9e0058de85cf"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

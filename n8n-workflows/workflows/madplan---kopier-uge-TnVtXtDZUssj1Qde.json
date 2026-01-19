@@ -1,0 +1,269 @@
+{
+  "name": "Madplan - Kopier Uge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/uge/kopier",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-uge-kopier",
+      "id": "507602c5-1e85-4d5d-8678-27a5528de6bf"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDLvyhNSt6MrJ5Q",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "HentAlle",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "4540bb8f-9660-44ef-b0dd-60a0f48eca9a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $(\"Webhook\").first().json.body;\nconst items = $input.all();\n\n// Find source uge\nconst source = items.find(i =>\n  i.json.EjerId === body.ejerId &&\n  Number(i.json.Aar) === Number(body.fraAar) &&\n  Number(i.json.Uge) === Number(body.fraUge)\n);\n\nif (!source) {\n  return [{ json: { error: \"Kilde-uge ikke fundet\" } }];\n}\n\n// Find eller opret target uge\nconst target = items.find(i =>\n  i.json.EjerId === body.ejerId &&\n  Number(i.json.Aar) === Number(body.tilAar) &&\n  Number(i.json.Uge) === Number(body.tilUge)\n);\n\nconst s = source.json;\nif (target) {\n  // Update existing\n  return [{ json: {\n    _mode: \"update\",\n    id: target.json.id,\n    Mandag: s.Mandag || \"\",\n    MandagOpskriftId: s.MandagOpskriftId || \"\",\n    Tirsdag: s.Tirsdag || \"\",\n    TirsdagOpskriftId: s.TirsdagOpskriftId || \"\",\n    Onsdag: s.Onsdag || \"\",\n    OnsdagOpskriftId: s.OnsdagOpskriftId || \"\",\n    Torsdag: s.Torsdag || \"\",\n    TorsdagOpskriftId: s.TorsdagOpskriftId || \"\",\n    Fredag: s.Fredag || \"\",\n    FredagOpskriftId: s.FredagOpskriftId || \"\",\n    Loerdag: s.Loerdag || \"\",\n    LoerdagOpskriftId: s.LoerdagOpskriftId || \"\",\n    Soendag: s.Soendag || \"\",\n    SoendagOpskriftId: s.SoendagOpskriftId || \"\"\n  } }];\n} else {\n  // Create new\n  return [{ json: {\n    _mode: \"create\",\n    EjerId: body.ejerId,\n    Aar: Number(body.tilAar),\n    Uge: Number(body.tilUge),\n    Mandag: s.Mandag || \"\",\n    MandagOpskriftId: s.MandagOpskriftId || \"\",\n    Tirsdag: s.Tirsdag || \"\",\n    TirsdagOpskriftId: s.TirsdagOpskriftId || \"\",\n    Onsdag: s.Onsdag || \"\",\n    OnsdagOpskriftId: s.OnsdagOpskriftId || \"\",\n    Torsdag: s.Torsdag || \"\",\n    TorsdagOpskriftId: s.TorsdagOpskriftId || \"\",\n    Fredag: s.Fredag || \"\",\n    FredagOpskriftId: s.FredagOpskriftId || \"\",\n    Loerdag: s.Loerdag || \"\",\n    LoerdagOpskriftId: s.LoerdagOpskriftId || \"\",\n    Soendag: s.Soendag || \"\",\n    SoendagOpskriftId: s.SoendagOpskriftId || \"\"\n  } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Prep",
+      "id": "c64da829-590e-4cb1-9742-d56825a9662f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json._mode }}",
+              "rightValue": "update",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "name": "IsUpdate",
+      "id": "b35b8d93-8347-49f2-ae0c-f3daa4b63cb2"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDLvyhNSt6MrJ5Q",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        -100
+      ],
+      "name": "Create",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "b945d187-791c-4420-ab62-5c53fc866710"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblDLvyhNSt6MrJ5Q",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        100
+      ],
+      "name": "Update",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "ae8958ca-d1d5-43de-aa83-0a3791c9136d"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, data: { id: $json.id } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        0
+      ],
+      "name": "Respond",
+      "id": "d1d5cfb5-a954-4ff5-99e9-db839dc21397"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HentAlle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HentAlle": {
+      "main": [
+        [
+          {
+            "node": "Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prep": {
+      "main": [
+        [
+          {
+            "node": "IsUpdate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IsUpdate": {
+      "main": [
+        [
+          {
+            "node": "Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

@@ -1,0 +1,123 @@
+{
+  "name": "Madplan - Hent Indkøbsliste",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "madplan/indkob",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-indkob",
+      "id": "f1386864-ba6c-4b6c-a897-2f047ab43941"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblF5l3VA1ktTDDzo",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "dd15dc12-f3ee-4c57-87ac-43ab7797b0cb"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('Webhook').first().json.query;\nconst items = $input.all().filter(i =>\n  i.json.EjerId === query.ejerId &&\n  String(i.json.Aar) === String(query.aar) &&\n  String(i.json.Uge) === String(query.uge)\n);\nconst poster = items.map(i => ({\n  id: i.json.id,\n  ejerId: i.json.EjerId,\n  aar: i.json.Aar,\n  uge: i.json.Uge,\n  navn: i.json.Navn,\n  kilde: i.json.Kilde || 'manuel',\n  afkrydset: i.json.Afkrydset || false\n}));\nreturn [{ json: { success: true, data: poster } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Transform",
+      "id": "88a40e38-a0b5-4c0e-a9c4-e81a38f7504d"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Respond",
+      "id": "585cdbac-8490-4363-81f1-e1dcc7fc047d"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}
