@@ -1,12 +1,14 @@
 import { Ejer, Opskrift, Ugeplan, Indkoebspost, Ugedag } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_N8N_URL || 'https://n8n.srv965476.hstgr.cloud/webhook';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Key': API_KEY,
       ...options?.headers,
     },
   });
@@ -200,7 +202,7 @@ export interface ImportedOpskrift {
 export async function importOpskriftFraUrl(url: string): Promise<ImportedOpskrift> {
   const response = await fetch(`${API_BASE}/madplan/opskrift/import-url`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
     body: JSON.stringify({ url }),
   });
 
@@ -219,7 +221,7 @@ export async function importOpskriftFraUrl(url: string): Promise<ImportedOpskrif
 export async function importOpskriftFraBillede(imageBase64: string): Promise<ImportedOpskrift> {
   const response = await fetch(`${API_BASE}/madplan/opskrift/import-billede`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
     body: JSON.stringify({ imageBase64 }),
   });
 
