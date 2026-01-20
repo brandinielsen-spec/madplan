@@ -18,20 +18,20 @@
       ],
       "name": "Webhook",
       "webhookId": "madplan-opskrift-import-billede",
-      "id": "4d41625f-aa85-4a77-a6ed-a54269e99a2e"
+      "id": "f0b746de-8291-4d55-8a38-4905ff56a8a2"
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body;\nreturn [{ json: { model: 'openai/gpt-4o', temperature: 0, messages: [{ role: 'system', content: 'Udtræk opskrift fra billedet. Returner UDELUKKENDE valid JSON: {titel, portioner, ingredienser[], fremgangsmaade}' }, { role: 'user', content: [{ type: 'image_url', image_url: { url: body.billede } }] }] } }];"
+        "jsCode": "const imageBase64 = $input.first().json.body.imageBase64;\n\nconst requestBody = {\n  model: \"openai/gpt-4o\",\n  temperature: 0,\n  messages: [\n    {\n      role: \"system\",\n      content: \"Aflæs opskriften fra billedet. KOPIER PRÆCIST hvad der står - opfind intet. Returner JSON: {titel, portioner, ingredienser[], fremgangsmaade}\"\n    },\n    {\n      role: \"user\",\n      content: [\n        { type: \"text\", text: \"Aflæs denne opskrift:\" },\n        { type: \"image_url\", image_url: { url: imageBase64 } }\n      ]\n    }\n  ]\n};\nreturn [{ json: requestBody }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        220,
         0
       ],
-      "name": "Prepare",
-      "id": "dd74b807-0998-4ff3-91ec-8a8bdcd7f74c"
+      "name": "Prepare Request",
+      "id": "0f3f030c-8325-47db-8876-0efa4f70a0a2"
     },
     {
       "parameters": {
@@ -47,30 +47,30 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        660,
+        440,
         0
       ],
-      "name": "OpenRouter",
+      "name": "OpenRouter Vision API",
       "credentials": {
         "openRouterApi": {
           "id": "HYx1Z20h0wAhpc79",
           "name": "OpenRouter account"
         }
       },
-      "id": "8364b836-b27a-4353-9ac9-c40631d154e2"
+      "id": "5369c0d4-de28-4c3e-b6c8-9202001e35c4"
     },
     {
       "parameters": {
-        "jsCode": "try { const c = $input.first().json.choices?.[0]?.message?.content; if (!c) return [{ json: { success: false, error: 'Ingen respons' } }]; let j = c; if (c.includes('```json')) j = c.split('```json')[1].split('```')[0]; else if (c.includes('```')) j = c.split('```')[1].split('```')[0]; return [{ json: { success: true, data: JSON.parse(j.trim()) } }]; } catch(e) { return [{ json: { success: false, error: e.message } }]; }"
+        "jsCode": "try {\n  const content = $input.first().json.choices?.[0]?.message?.content;\n  if (!content) {\n    return [{ json: { success: false, error: 'Ingen respons fra AI' } }];\n  }\n\n  let jsonStr = content;\n  if (content.includes('```json')) {\n    jsonStr = content.split('```json')[1].split('```')[0];\n  } else if (content.includes('```')) {\n    jsonStr = content.split('```')[1].split('```')[0];\n  }\n  const data = JSON.parse(jsonStr.trim());\n  return [{ json: { success: true, data } }];\n} catch (e) {\n  return [{ json: { success: false, error: e.message } }];\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        880,
+        660,
         0
       ],
-      "name": "Parse",
-      "id": "6c465adb-861a-4a2f-a30b-639e06a58150"
+      "name": "Parse Response",
+      "id": "d547917c-d68c-43a5-877d-9618c342f954"
     },
     {
       "parameters": {
@@ -81,11 +81,11 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1100,
+        880,
         0
       ],
       "name": "Respond",
-      "id": "9bc23c7b-18d5-4657-a231-5f54dcf7bbc7"
+      "id": "4f24c0ce-1348-4ca0-91c5-5c0f9605fedc"
     }
   ],
   "connections": {
@@ -93,36 +93,36 @@
       "main": [
         [
           {
-            "node": "Prepare",
+            "node": "Prepare Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare": {
+    "Prepare Request": {
       "main": [
         [
           {
-            "node": "OpenRouter",
+            "node": "OpenRouter Vision API",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "OpenRouter": {
+    "OpenRouter Vision API": {
       "main": [
         [
           {
-            "node": "Parse",
+            "node": "Parse Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse": {
+    "Parse Response": {
       "main": [
         [
           {
