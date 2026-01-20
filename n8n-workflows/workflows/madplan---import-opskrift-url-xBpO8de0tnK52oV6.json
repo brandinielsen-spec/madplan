@@ -1,0 +1,114 @@
+{
+  "name": "Madplan - Import Opskrift URL",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/opskrift/import-url",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-opskrift-import-url",
+      "id": "d7502e1d-c175-4c43-a674-f5686ceefea5"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "name": "Fetch",
+      "id": "6b5a6881-76b8-471e-a7e3-0c8a052a2740"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = String($input.first().json.data || $input.first().json);\n\nfunction stripHtml(s) {\n  return s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#[0-9]+;/g, '').replace(/\\s+/g, ' ').trim();\n}\n\nlet result = null;\n\n// Metode 1: Søg efter JSON-LD Recipe schema\nconst scriptRegex = /<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi;\nlet match;\n\nwhile ((match = scriptRegex.exec(html)) !== null) {\n  try {\n    const data = JSON.parse(match[1]);\n    let items = Array.isArray(data) ? data : (data['@graph'] || [data]);\n\n    for (const item of items) {\n      if (item['@type'] === 'Recipe' || (Array.isArray(item['@type']) && item['@type'].includes('Recipe'))) {\n        if (item.recipeIngredient) {\n          let instr = item.recipeInstructions || '';\n          if (Array.isArray(instr)) {\n            instr = instr.map(s => typeof s === 'string' ? s : (s.text || '')).join('\\n\\n');\n          }\n\n          let servings = 4;\n          if (item.recipeYield) {\n            const y = Array.isArray(item.recipeYield) ? item.recipeYield[0] : item.recipeYield;\n            const n = parseInt(y);\n            if (!isNaN(n)) servings = n;\n          }\n\n          result = {\n            titel: item.name || 'Opskrift',\n            portioner: servings,\n            ingredienser: item.recipeIngredient,\n            fremgangsmaade: stripHtml(instr)\n          };\n          break;\n        }\n      }\n    }\n    if (result) break;\n  } catch(e) {}\n}\n\n// Metode 2: Parse HTML med itemprop attributter\nif (!result) {\n  // Find titel - kig efter h2 med itemprop=\"name\" først (specifik opskriftstitel)\n  let titel = 'Opskrift';\n  const h2TitleMatch = html.match(/<h2[^>]*itemprop=[\"']?name[\"']?[^>]*>([^<]+)</i);\n  if (h2TitleMatch) {\n    titel = stripHtml(h2TitleMatch[1]);\n  } else {\n    // Fallback: h1 eller recipe-print-header-title\n    const titleMatch = html.match(/<span[^>]*class=\"[^\"]*recipe-print-header-title[^\"]*\"[^>]*>([^<]+)</) ||\n                       html.match(/<h1[^>]*>([^<]+)<\\/h1>/i);\n    if (titleMatch) titel = stripHtml(titleMatch[1]);\n  }\n\n  // Find ingredienser via itemprop=\"recipeIngredient\"\n  let ingredienser = [];\n  const ingredientMatches = html.matchAll(/<li[^>]*itemprop=[\"']?recipeIngredient[\"']?[^>]*>([^<]+)</gi);\n  for (const m of ingredientMatches) {\n    const ing = stripHtml(m[1]);\n    if (ing && ing.length > 1) {\n      ingredienser.push(ing);\n    }\n  }\n\n  // Alternativ: find i ingredientlist\n  if (ingredienser.length === 0) {\n    const listMatch = html.match(/<ul[^>]*class=\"[^\"]*ingredientlist[^\"]*\"[^>]*>([\\s\\S]*?)<\\/ul>/i);\n    if (listMatch) {\n      const liMatches = listMatch[1].matchAll(/<li[^>]*>([^<]+)</gi);\n      for (const m of liMatches) {\n        const ing = stripHtml(m[1]);\n        if (ing && ing.length > 1) ingredienser.push(ing);\n      }\n    }\n  }\n\n  // Find fremgangsmåde via itemprop=\"recipeInstructions\"\n  let fremgangsmaade = '';\n  const instrMatch = html.match(/<div[^>]*itemprop=[\"']?recipeInstructions[\"']?[^>]*>([\\s\\S]*?)<\\/div>/i);\n  if (instrMatch) {\n    const steps = [];\n    const pMatches = instrMatch[1].matchAll(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi);\n    for (const m of pMatches) {\n      const step = stripHtml(m[1]);\n      if (step && step.length > 10) steps.push(step);\n    }\n    fremgangsmaade = steps.join('\\n\\n');\n  }\n\n  // Find portioner\n  let portioner = 4;\n  const servingsMatch = html.match(/itemprop=[\"']?recipeYield[\"']?[^>]*>([0-9]+)/) ||\n                        html.match(/([0-9]+)\\s*(?:pers|personer|portioner)/i);\n  if (servingsMatch) portioner = parseInt(servingsMatch[1]);\n\n  if (ingredienser.length > 0) {\n    result = {\n      titel,\n      portioner,\n      ingredienser,\n      fremgangsmaade\n    };\n  }\n}\n\nif (result) {\n  return [{ json: { success: true, data: result } }];\n}\nreturn [{ json: { success: false, error: 'Kunne ikke finde opskrift på siden. Prøv at kopiere indholdet manuelt.' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Parse",
+      "id": "d316b589-b3e8-4f8d-9eb7-20d970f59655"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Respond",
+      "id": "a25fc7e5-ea8a-4ee1-afbb-c5a667ec2bc3"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}
