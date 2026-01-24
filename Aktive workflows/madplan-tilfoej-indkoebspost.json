@@ -1,0 +1,112 @@
+{
+  "name": "Madplan - Tilføj Indkøbspost",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/indkob/tilfoej",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-indkob-tilfoej",
+      "id": "6809aed8-e28e-4fb2-a1b7-4a3608e6e155"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblF5l3VA1ktTDDzo",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "EjerId": "={{ $json.body.ejerId }}",
+            "Aar": "={{ $json.body.aar }}",
+            "Uge": "={{ $json.body.uge }}",
+            "Navn": "={{ $json.body.navn }}",
+            "Kilde": "manuel",
+            "Afkrydset": false
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "0bd9499c-7086-4b39-9673-a6623a4f6c63"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, data: { id: $json.id, ejerId: $json.EjerId, aar: $json.Aar, uge: $json.Uge, navn: $json.Navn, kilde: $json.Kilde, afkrydset: $json.Afkrydset } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Respond",
+      "id": "f0cc1533-5dac-4aef-acdc-db343cc756ad"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

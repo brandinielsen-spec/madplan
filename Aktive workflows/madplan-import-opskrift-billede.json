@@ -1,0 +1,144 @@
+{
+  "name": "Madplan - Import Opskrift Billede",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/opskrift/import-billede",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-opskrift-import-billede",
+      "id": "f0b746de-8291-4d55-8a38-4905ff56a8a2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const imageBase64 = $input.first().json.body.imageBase64;\n\nconst requestBody = {\n  model: \"anthropic/claude-sonnet-4\",\n  temperature: 0,\n  messages: [\n    {\n      role: \"user\",\n      content: [\n        {\n          type: \"text\",\n          text: \"Aflæs opskriften fra billedet. Returner PRÆCIS JSON i dette format uden markdown-blokke:\\n{\\n  \\\"titel\\\": \\\"..\\\",\\n  \\\"portioner\\\": <tal>,\\n  \\\"ingredienser\\\": [\\\"ingrediens 1\\\", \\\"ingrediens 2\\\", ...],\\n  \\\"fremgangsmaade\\\": \\\"...\\\"\\n}\\n\\nKRITISK VIGTIGT FOR INGREDIENSER:\\n1. Tæl HVER ENESTE ingrediens på billedet - medtag dem ALLE\\n2. Inkluder mængder og enheder (fx \\\"400g hakket oksekød\\\", \\\"2 spsk olie\\\")\\n3. Ingredienser kan stå i kolonner eller lister - læs dem ALLE\\n4. Dobbelttjek at du har medtaget samtlige ingredienser før du svarer\\n5. Hvis der er 15 ingredienser på billedet, skal arrayet have 15 elementer\"\n        },\n        { type: \"image_url\", image_url: { url: imageBase64 } }\n      ]\n    }\n  ]\n};\nreturn [{ json: requestBody }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "name": "Prepare Request",
+      "id": "0f3f030c-8325-47db-8876-0efa4f70a0a2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "name": "OpenRouter Vision API",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HYx1Z20h0wAhpc79",
+          "name": "OpenRouter account"
+        }
+      },
+      "id": "5369c0d4-de28-4c3e-b6c8-9202001e35c4"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const content = $input.first().json.choices?.[0]?.message?.content;\n  if (!content) {\n    return [{ json: { success: false, error: 'Ingen respons fra AI' } }];\n  }\n\n  // Check if AI couldn't read image\n  const lower = content.toLowerCase();\n  if (lower.includes(\"i'm sorry\") || lower.includes(\"i cannot\") || lower.includes(\"jeg kan ikke\")) {\n    return [{ json: { success: false, error: 'AI kunne ikke læse opskriften fra billedet.' } }];\n  }\n\n  // Try to extract JSON from various formats\n  let jsonStr = content.trim();\n  \n  // Remove markdown code blocks\n  if (jsonStr.includes('```json')) {\n    jsonStr = jsonStr.split('```json')[1].split('```')[0];\n  } else if (jsonStr.includes('```')) {\n    jsonStr = jsonStr.split('```')[1].split('```')[0];\n  }\n  \n  // Find JSON object in text (starts with { ends with })\n  const jsonMatch = jsonStr.match(/{[sS]*}/);\n  if (jsonMatch) {\n    jsonStr = jsonMatch[0];\n  }\n  \n  const data = JSON.parse(jsonStr.trim());\n  return [{ json: { success: true, data } }];\n} catch (e) {\n  // Return the raw content for debugging\n  const raw = $input.first().json.choices?.[0]?.message?.content || 'No content';\n  return [{ json: { success: false, error: 'Parse fejl: ' + e.message, raw: raw.substring(0, 500) } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Parse Response",
+      "id": "d547917c-d68c-43a5-877d-9618c342f954"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Respond",
+      "id": "4f24c0ce-1348-4ca0-91c5-5c0f9605fedc"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter Vision API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Vision API": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}

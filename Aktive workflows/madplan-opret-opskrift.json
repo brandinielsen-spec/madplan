@@ -1,0 +1,136 @@
+{
+  "name": "Madplan - Opret Opskrift",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "madplan/opskrift/opret",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook",
+      "webhookId": "madplan-opskrift-opret",
+      "id": "1c630f4f-aead-466b-bc3c-f634e792d2c8"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appufrDN3IA6Jhli9",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblY7ZZQpp6iDiGDO",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "EjerId": "={{ $json.body.ejerId }}",
+            "Titel": "={{ $json.body.titel }}",
+            "Portioner": "={{ $json.body.portioner }}",
+            "Ingredienser": "={{ $json.body.ingredienser.join(\"\\n\") }}",
+            "Fremgangsmaade": "={{ $json.body.fremgangsmaade }}",
+            "Dato": "={{ $now.toISODate() }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ],
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "V0XbkfzDRzkiO5WJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "id": "69843dd1-7902-4655-afa5-a26f05034116"
+    },
+    {
+      "parameters": {
+        "jsCode": "const airtableId = $input.first().json.id; const b = $('Webhook').first().json.body; return [{ json: { success: true, data: { id: airtableId, ejerId: b.ejerId, titel: b.titel, portioner: b.portioner, ingredienser: b.ingredienser, fremgangsmaade: b.fremgangsmaade, oprettetDato: new Date().toISOString().split('T')[0] } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "name": "Transform",
+      "id": "be475633-e170-435f-8cbf-ef8451d4c51b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "name": "Respond",
+      "id": "83d7c5e2-395d-4c60-8409-27bf60430245"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null
+}
