@@ -19,7 +19,7 @@ function OpskrifterContent() {
   const [loading, setLoading] = useState(true);
 
   const filteredOpskrifter = opskrifter.filter(o =>
-    o.titel && o.titel.toLowerCase().includes(searchQuery.toLowerCase())
+    o && o.titel && o.titel.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   useEffect(() => {

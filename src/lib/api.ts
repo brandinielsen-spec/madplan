@@ -125,7 +125,9 @@ export async function kopierUge(
 
 // Opskrifter
 export async function hentOpskrifter(ejerId: string): Promise<Opskrift[]> {
-  return fetchApi<Opskrift[]>(`/madplan/opskrifter?ejerId=${ejerId}`);
+  const data = await fetchApi<Opskrift[]>(`/madplan/opskrifter?ejerId=${ejerId}`);
+  // Filtrer ugyldige elementer fra (undefined, null, eller manglende titel)
+  return (data || []).filter(o => o && o.titel);
 }
 
 export async function hentOpskrift(id: string): Promise<Opskrift> {
