@@ -41,7 +41,7 @@
             "Portioner": "={{ $json.body.portioner }}",
             "Ingredienser": "={{ $json.body.ingredienser.join(\"\\n\") }}",
             "Fremgangsmaade": "={{ $json.body.fremgangsmaade }}",
-            "OprettetDato": "={{ $now.toISODate() }}"
+            "Dato": "={{ $now.toISODate() }}"
           },
           "matchingColumns": []
         },
@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const i = $input.first().json;\nreturn [{ json: { success: true, data: {\n  id: i.id,\n  ejerId: i.EjerId,\n  titel: i.Titel,\n  portioner: i.Portioner,\n  ingredienser: (i.Ingredienser || '').split('\\n').filter(x => x.trim()),\n  fremgangsmaade: i.Fremgangsmaade || '',\n  oprettetDato: i.OprettetDato\n} } }];"
+        "jsCode": "const airtableId = $input.first().json.id; const b = $('Webhook').first().json.body; return [{ json: { success: true, data: { id: airtableId, ejerId: b.ejerId, titel: b.titel, portioner: b.portioner, ingredienser: b.ingredienser, fremgangsmaade: b.fremgangsmaade, oprettetDato: new Date().toISOString().split('T')[0] } } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
